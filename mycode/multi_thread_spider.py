@@ -1,4 +1,4 @@
-#使用upptp代理
+# 使用upptp代理
 import csv
 import json
 import threading
@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from mycode.util import get_html_by_url, del_content_blank
 
 temp = 0
+
 
 class baike_spider(threading.Thread):
     def __init__(self):
@@ -32,7 +33,7 @@ class baike_spider(threading.Thread):
 
         threadLock_init.release()
 
-        #may_officer_info's format:[[lemmaId, name, url, pic_url],...]
+        # may_officer_info's format:[[lemmaId, name, url, pic_url],...]
 
         # self.may_officer_info = [['1167959', '骆文智', 'https://baike.baidu.com/item/%E9%AA%86%E6%96%87%E6%99%BA/1167959', 'https://gss3.bdstatic.com/-Po3dSag_xI4khGkpoWK1HF6hhy/baike/whfpf%3D72%2C72%2C0/sign=3c33ac9345a7d933bffdb733cb76e621/38dbb6fd5266d0163aa408af902bd40734fa35f3.jpg']]
         # self.may_officer_info.append(['211596', '万庆良', 'https://baike.baidu.com/item/%E4%B8%87%E5%BA%86%E8%89%AF/211596', 'https://gss0.bdstatic.com/94o3dSag_xI4khGkpoWK1HF6hhy/baike/whfpf%3D72%2C72%2C0/sign=494600eac4cec3fd8b6bf435b0b5e30d/7e3e6709c93d70cfcb93572bffdcd100baa12baf.jpg'])
@@ -41,7 +42,7 @@ class baike_spider(threading.Thread):
         # self.id_set.add(int('1167959'))
         # self.id_set.add(int(211596))
 
-        #self.officer_info = []   #[[lemmaId, name, url, pic_url, lemmaId, summary, basic-info, introduce, appoint_info]]
+        # self.officer_info = []   #[[lemmaId, name, url, pic_url, lemmaId, summary, basic-info, introduce, appoint_info]]
 
     def run(self):
         self.craw_info()
@@ -81,7 +82,7 @@ class baike_spider(threading.Thread):
 
     def add_officer_info(self, soup, officer_data):
 
-        summary = del_content_blank(soup.find('div', class_ = 'lemma-summary').get_text())
+        summary = del_content_blank(soup.find('div', class_='lemma-summary').get_text())
 
         basic_info = {}
         try:
@@ -200,13 +201,13 @@ class baike_spider(threading.Thread):
         if summary.find('演员') or summary.find('画家') or summary.find('相声') or summary.find('电影'):
             return False
 
-        catlog_tag = soup.find('div', class_ = 'lemmaWgt-lemmaCatalog')
+        catlog_tag = soup.find('div', class_='lemmaWgt-lemmaCatalog')
         if not isinstance(catlog_tag, bs4.element.Tag):
             return False
         text = str(catlog_tag.get_text())
         if text.find('履历') < 0 or text.find('评论') >= 0 or text.find('评价') >= 0 or text.find('成就') >= 0 \
                 or text.find('获奖') >= 0 or text.find('研究') >= 0 or text.find('荣誉') >= 0 \
-                or text.find('创业') >= 0 or text.find('成果') >= 0 or text.find('学术') >= 0\
+                or text.find('创业') >= 0 or text.find('成果') >= 0 or text.find('学术') >= 0 \
                 or text.find('贡献') >= 0 or text.find('作品') >= 0:
             return False
         return True
@@ -215,6 +216,7 @@ class baike_spider(threading.Thread):
         f = open('../resource/job_dict.txt', encoding='utf-8')
         job_dict = f.readline().split(' ')
         return job_dict
+
 
 if __name__ == '__main__':
     counter = 0
