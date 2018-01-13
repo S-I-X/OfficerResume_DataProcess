@@ -7,9 +7,8 @@ def get_year_pos(text):
 
     may_all_years = re.findall('\d\d\d\d', text)
     all_years = []
-    for str_year in may_all_years:
-        year = int(str_year)
-        if year > 1949 and year <= 2018:
+    for year in may_all_years:
+        if int(year) > 1900 and int(year) <= 2018:
             all_years.append(str(year))
 
 
@@ -147,7 +146,7 @@ def process_introduce(text):
 
 
 if __name__ == "__main__":
-    text = '历任都安瑶族自治县工商局会计、所长，乡政府副乡长，工商局副局长、局长，镇党委书记，都安瑶族自治县县委常委、常务副县长，环江毛南族自治县县委副书记，河池市委副秘书长、办公室副主任、河池市接待办主任，中共凤山县委副书记、凤山人民政府县长、凤山县委书记等职务。[2]2012年09月——2014年12月任河池市人民政府党组成员、副市长。'
+    text = '19４９年１月西海工商局税务科审计员；１９４９年１月-１９５５年３月省财政厅和税务局办事员、科员；１９５５年３月'
     struct_data = process_introduce(text)
     if struct_data != None:
         for item in struct_data:
