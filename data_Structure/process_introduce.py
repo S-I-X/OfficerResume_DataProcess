@@ -5,7 +5,12 @@ import re
 
 def get_year_pos(text):
 
-    all_years = re.findall('\d\d\d\d', text)
+    may_all_years = re.findall('\d\d\d\d', text)
+    all_years = []
+    for str_year in may_all_years:
+        year = int(str_year)
+        if year > 1949 and year <= 2018:
+            all_years.append(year)
 
 
     if len(all_years) == 0:
