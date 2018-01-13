@@ -22,8 +22,7 @@ def get_year_pos(text):
         pos = text[last_pos:].index(item) + last_pos
         may_pos.append(pos)
         last_pos = pos + 1
-    year_pos = []
-    year_pos.append(may_pos[0])
+    year_pos = [may_pos[0]]
     for i in range(1, len(may_pos)):
         if may_pos[i] - may_pos[i - 1] > 12:
             year_pos.append(may_pos[i])
