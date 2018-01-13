@@ -64,7 +64,6 @@ def makeupData(one_line):
     fabric_data['time_and_job'] = ''
     fabric_data['relative_person_links'] = ''
     educational_background = set()
-    # print('test1')
     for mess in split_half_message:
         mess_done = mess.replace('[1]', '')
         if len(mess_done) <= 2:
@@ -116,7 +115,6 @@ def makeupData(one_line):
         fabric_data['educational_background'] = re.sub("\'|\{|\}", '', str(educational_background))
     else:
         fabric_data['educational_background'] = ''
-    # print('test2')
     try:
         mark = half_message.index("月出生")
     except ValueError:
@@ -126,7 +124,6 @@ def makeupData(one_line):
             mark = 0
     mid_messages = re.sub("\'", '', one_line[5][1:-1]).split(sep=',')
     mid_messages_dict = dict()
-    # print('test3')
     for mid_message in mid_messages:
         try:
             key, value = mid_message.split(sep=':')
@@ -160,11 +157,8 @@ def makeupData(one_line):
     except ValueError:
         None
     fabric_data['message_source'] = '百度百科'
-    # print('test4')
-    # if len(fabric_data['officer_name']) <= 3:
     time_and_job = re.sub("\'|\[|\]", '', str(process_introduce(one_line[6].replace('[1]', '').replace('[2]', '').replace('[3]', ''))))
     fabric_data['time_and_job'] = time_and_job if len(time_and_job) != 0 else ''
-    # print('test5')
     if len(fabric_data['place_of_birth']) != 0 and fabric_data['place_of_birth'] in super_cities:
         for super_city in super_cities:
             if super_city in fabric_data['place_of_birth']:
