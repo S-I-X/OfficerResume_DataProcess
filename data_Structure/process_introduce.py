@@ -10,7 +10,7 @@ def get_year_pos(text):
     for str_year in may_all_years:
         year = int(str_year)
         if year > 1949 and year <= 2018:
-            all_years.append(year)
+            all_years.append(str(year))
 
 
     if len(all_years) == 0:
@@ -46,15 +46,16 @@ def process_segment(segment):
         if '日后' in segment:
             mark = segment.index("日后")
             return segment[:mark], segment[mark + 2:]
-        elif '日' in segment:
-            mark = segment.index("日")
-            return segment[:mark], segment[mark + 1:]
         elif '月后' in segment:
             mark = segment.index("月后")
             return segment[:mark], segment[mark + 2:]
+
+        elif '日' in segment:
+            mark = len(segment) - segment[::-1].index(re.findall('日', segment[::-1])[0])
+            return segment[:mark], segment[mark:]
         elif '月' in segment:
-            mark = segment.index("月")
-            return segment[:mark], segment[mark + 1:]
+            mark = len(segment) - segment[::-1].index(re.findall('月', segment[::-1])[0])
+            return segment[:mark], segment[mark:]
         else:
             mark = len(segment) - segment[::-1].index(re.findall('\d', segment[::-1])[0])
             return segment[:mark], segment[mark:]
@@ -147,7 +148,7 @@ def process_introduce(text):
 
 
 if __name__ == "__main__":
-    text = '1984.09—1988.07广东工学院化工系工业分析专业学习1988.07—1989.03广东省环保局监督处干部1989.03—1990.12茂名市环保局监测站挂职锻炼，任污染控制室副主任1990.12—1992.04广东省环保局监督处干部1992.04—1993.06广东省环保局监督处副科长1993.06—1995.04广东省环保局监督处科长1995.04—1999.03广东省环保局监督处副处长1999.03—2000.06广东省环保局监督处处长2000.06—2004.01广东省环保局监督管理处处长(其间：1998.09—2001.07在中央党校党员领导干部在职研究生班经济管理专业学习；2002.09—2003.01在广东省委党校中青年领导干部培训一班学习)2004.01—2004.10广东省环保局规划财务处处长2004.10—2007.04广东省环保局办公室主任(其间：2004.09—2004.12在省第五期高级公务员行政管理知识专题研究班学习)2007.04—2008.07广东省环保局环境监察分局局长(副厅级)2008.07—2010.08云浮市委常委、常务副市长(其间：2009.07—2009.08在省第五期领导干部公共管理高级培训班赴美国哥伦比亚大学学习2010.08—2011.12云浮市委常委、常务副市长，市政府党组副书记2011.12—2012.01云浮市委副书记，常务副市长，市政府党组副书记2012.01—2015.03云浮市委副书记，市社会工作委员会主任2015.03—广东省委统战部副部长，省工商联党组书记、常务副主席，省总商会常务副会长（兼）2017.8.13-继任广东省工商联（总商会）常务副主席（常务副会长）[2]2017年11月27日，当选为中华全国工商业联合会第十二届执行委员会常务委员。[1]'
+    text = '历任都安瑶族自治县工商局会计、所长，乡政府副乡长，工商局副局长、局长，镇党委书记，都安瑶族自治县县委常委、常务副县长，环江毛南族自治县县委副书记，河池市委副秘书长、办公室副主任、河池市接待办主任，中共凤山县委副书记、凤山人民政府县长、凤山县委书记等职务。[2]2012年09月——2014年12月任河池市人民政府党组成员、副市长。'
     struct_data = process_introduce(text)
     if struct_data != None:
         for item in struct_data:
