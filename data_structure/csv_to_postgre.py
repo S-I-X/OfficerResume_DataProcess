@@ -159,7 +159,7 @@ def makeupData(one_line):
     fabric_data['message_source'] = '百度百科'
     time_and_job = re.sub("\'|\[|\]", '', str(process_introduce(one_line[6].replace('[1]', '').replace('[2]', '').replace('[3]', ''))))
     fabric_data['time_and_job'] = time_and_job if len(time_and_job) != 0 else ''
-    if len(fabric_data['place_of_birth']) != 0 and fabric_data['place_of_birth'] in super_cities:
+    if len(fabric_data['place_of_birth']) != 0:
         for super_city in super_cities:
             if super_city in fabric_data['place_of_birth']:
                 fabric_data['province'] = super_city
