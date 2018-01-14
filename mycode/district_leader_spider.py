@@ -84,15 +84,15 @@ def get_person_baike_url(row):
     html = get_html_by_url(name_url)
     soup = BeautifulSoup(html, 'html.parser')
     items = soup.select('body > div.body-wrapper > div.before-content > div > ul > li')
-    for index, item in enumerate(items):
+    for item in items:
         text = item.getText()[1:]
-        if index == 0:
-            if province in text or city in text or district in text:
-                url_list.append(name_url)
-        else:
+        if 'href' in item.a.attrs.keys():
             if province in text or city in text or district in text:
                 new_name_url = "https://baike.baidu.com" + item.a['href']
                 url_list.append(new_name_url)
+        else:
+            if province in text or city in text or district in text:
+                url_list.append(name_url)
     return url_list
 
 
