@@ -1,6 +1,8 @@
 import csv
 
 import re
+import urllib
+
 from bs4 import BeautifulSoup
 
 from mycode.util import get_html_by_url, del_content_blank
@@ -78,7 +80,7 @@ def fetch_person_index_from_renminwang():
 def get_person_baike_url(row):
     name, province, city, district = row
     url_list = list()
-    name_url = "https://baike.baidu.com/search/word?word={0}".format(name)
+    name_url = "https://baike.baidu.com/search/word?word={0}".format(urllib.request.quote(name))
     html = get_html_by_url(name_url)
     soup = BeautifulSoup(html, 'html.parser')
     items = soup.select('body > div.body-wrapper > div.before-content > div > ul > li')
