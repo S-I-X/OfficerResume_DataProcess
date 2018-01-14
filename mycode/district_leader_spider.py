@@ -16,7 +16,7 @@ def fetch_person_index(key, part_url, index_list):
         print('province url is error: ', pro_url)
 
     soup = BeautifulSoup(raw_data, 'html.parser')
-    div_tag = soup.find('div', class_= 'fr p2j_reports_right title_2j sjzlk')
+    div_tag = soup.find('div', class_='fr p2j_reports_right title_2j sjzlk')
     city_h2_tags = div_tag.find_all('h2')
     city_div_tags = div_tag.find_all('div', class_='zlk_list')
 
@@ -37,8 +37,6 @@ def fetch_person_index(key, part_url, index_list):
     return
 
 
-
-
 def get_index_list():
     url = 'http://ldzl.people.com.cn/dfzlk/front/xian35.htm'
     raw_data = get_html_by_url(url)
@@ -55,9 +53,8 @@ def get_index_list():
     index_list = []
     for key in province_dict.keys():
         fetch_person_index(key, province_dict[key], index_list)
-    
-    return index_list
 
+    return index_list
 
 
 def get_person_info():
@@ -78,6 +75,25 @@ def fetch_person_index_from_renminwang():
     out.close()
 
 
+def get_person_baike_url(row):
+    name, province, city, district = row
+    url_list = list()
+    name_url = "https://baike.baidu.com/search/word?word={0}".format(name)
+    html = get_html_by_url(name_url)
+    soup = BeautifulSoup(html, 'html.parser')
+    items = soup.select('body > div.body-wrapper > div.before-content > div > ul > li')
+    for index, item in enumerate(items):
+        text = item.getText()[1:]
+        if index == 0:
+            if province in text or city in text or district in text:
+                url_list.append(name_url)
+        else:
+            if province in text or city in text or district in text:
+                new_name_url = "https://baike.baidu.com" + item.a['href']
+                url_list.append(new_name_url)
+    return url_list
+
+
 def fetch_person_partinfo_from_baike():
     f = open('../data/区级领导索引.csv', newline='', encoding='utf-8')
     csv_reader = csv.reader(f)
@@ -86,6 +102,6 @@ def fetch_person_partinfo_from_baike():
         pass
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     # fetch_person_index_from_renminwang()
     fetch_person_partinfo_from_baike()
