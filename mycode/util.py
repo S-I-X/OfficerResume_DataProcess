@@ -30,15 +30,21 @@ def get_html_by_url(url):
     flag = 1
     while flag < 10:
         try:
-            html = urllib.request.urlopen(req, timeout=60)
+            html = urllib.request.urlopen(req, timeout=200)
             flag = 100
-        except HTTPError:
-            # html = urllib.request.urlopen(req)
+        except:
             print(url + ' is error')
             sleep(4)
-        except URLError:
-            # 遇到错误，等待
-            sleep(4)
+        # except HTTPError:
+        #     # html = urllib.request.urlopen(req)
+        #     print(url + ' is error')
+        #     sleep(4)
+        # except URLError:
+        #     # 遇到错误，等待
+        #     sleep(4)
 
-    raw_data = html.read()
+    try:
+        raw_data = html.read()
+    except:
+        raw_data = None
     return raw_data

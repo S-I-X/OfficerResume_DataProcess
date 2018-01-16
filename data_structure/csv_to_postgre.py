@@ -4,8 +4,6 @@ import csv
 
 import psycopg2
 import re
-
-
 from data_structure.process_introduce import process_introduce
 
 provinces = ('河北', '山西', '内蒙', '辽宁', '吉林', '黑龙江', '江苏', '浙江', '安徽', '福建', '江西', '山东', '河南',

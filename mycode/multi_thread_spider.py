@@ -1,10 +1,14 @@
+
+
 # 使用upptp代理
 import csv
 import json
 import threading
 from time import sleep
+import importlib
 
 import bs4
+import re
 from bs4 import BeautifulSoup
 
 from mycode.util import get_html_by_url, del_content_blank
@@ -15,21 +19,28 @@ temp = 0
 class baike_spider(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        global id_set, may_officer_info, counter, out, csv_writer, temp
+        global id_set, may_officer_info, counter, out, csv_writer, temp, out_other, other_csv_writer, may_id_set
 
         threadLock_init.acquire()
 
         if counter == 0:
-            id_set, may_officer_info = self.load_id_set_and_load_may_officer_info()
-            out = open('../data/官员信息.csv', 'a', newline='', encoding='utf-8')
+            id_set, may_id_set, may_officer_info = self.load_id_set_and_load_may_officer_info()
+
+            out = open('../data/官员信息new2.csv', 'a', newline='', encoding='utf-8')
             csv_writer = csv.writer(out, dialect='excel')
+
+            # out_other = open('../data/other_info.csv', 'w', newline='', encoding='utf-8')
+            # other_csv_writer = csv.writer(out_other, dialect='excel')
         counter += 1
 
         self.id_set = id_set
+        self.may_id_set = may_id_set
         self.may_officer_info = may_officer_info
         self.out = out
+        self.out_other = out_other
         self.csv_writer = csv_writer
         self.job_dict = self.load_job_dict()
+        self.other_csv_writer = other_csv_writer
 
         threadLock_init.release()
 
@@ -42,7 +53,7 @@ class baike_spider(threading.Thread):
         # self.id_set.add(int('1167959'))
         # self.id_set.add(int(211596))
 
-        # self.officer_info = []   #[[lemmaId, name, url, pic_url, lemmaId, summary, basic-info, introduce, appoint_info]]
+        # self.officer_info = []   #[[lemmaId, name, url, pic_url, summary, basic-info, introduce, appoint_info]]
 
     def run(self):
         self.craw_info()
@@ -60,16 +71,23 @@ class baike_spider(threading.Thread):
             try:
                 if len(officer_data) > 1:
                     raw_data = get_html_by_url(officer_data[2])
+                    # raw_data = get_html_by_url('https://baike.baidu.com/item/%E9%99%88%E5%8B%87/16004924#viewPageContent')
                     soup = BeautifulSoup(raw_data, 'html.parser')
 
-                    if not self.officer_filter(soup):
+                    if not self.officer_filter(soup, officer_data):
                         print('Not Officer: ', officer_data)
+                        self.other_csv_writer.writerow(officer_data)
                         continue
                     self.add_officer_info(soup, officer_data)
-                print('may_officer_info', officer_data)
-                self.add_may_officer_info(officer_data[0])
+                else:
+                    print('may_officer_info', officer_data)
+                    self.add_may_officer_info(officer_data[0])
+                raw_data = get_html_by_url(officer_data[2])
+                soup = BeautifulSoup(raw_data, 'html.parser')
             except:
                 print("Error: ", officer_data)
+
+
 
             # i += 1
             # if i > 10000:
@@ -78,9 +96,12 @@ class baike_spider(threading.Thread):
         counter -= 1
         if counter == 0:
             self.out.close()
+            self.out_other()
         threadLock_init.release()
 
     def add_officer_info(self, soup, officer_data):
+
+        relative_links = self.add_may_officer_info(officer_data[0])
 
         summary = del_content_blank(soup.find('div', class_='lemma-summary').get_text())
 
@@ -101,28 +122,46 @@ class baike_spider(threading.Thread):
             print('No basic_info')
 
         introduce = self.get_para_info(soup, '履历')
+        if introduce == '':
+            introduce = self.get_para_info(soup, '经历')
+        if introduce == '':
+            introduce = self.get_para_info(soup, '简介')
+        if introduce == '':
+            introduce = self.get_para_info(soup, '任职')
+
         appoint_info = self.get_para_info(soup, '任免')
 
-        infor_list = officer_data + [summary, basic_info, introduce, appoint_info]
+        infor_list = officer_data + [summary, basic_info, introduce, appoint_info, relative_links]
 
         threadLock_csv.acquire()
         self.csv_writer.writerow(infor_list)
         threadLock_csv.release()
 
+        global new_officer
+        new_officer += 1
+        print("成功添加的新官员数：", new_officer)
+
     def add_may_officer_info(self, lemmaId):
+        global total_count, success_count
+
+        total_count += 1
+
         json_url = 'https://baike.baidu.com/wikiui/api/zhixinmap?lemmaId=' + lemmaId
         raw_data = get_html_by_url(json_url)
 
         if raw_data == None:
+            print("获取相关链接成功数：" + str(success_count) + '/' + str(total_count))
             print('may officer info is None')
-            return
+            return []
 
         json_data = json.loads(str(raw_data, encoding='utf-8'))
         if not isinstance(json_data, list):
+            print("获取相关链接成功数：" + str(success_count) + '/' + str(total_count))
             print('json is false')
-            return
+            return []
 
         print('add may officer info Success!')
+        relative_links = []
         for item1 in json_data:
             data = item1['data']
             for item in data:
@@ -130,6 +169,7 @@ class baike_spider(threading.Thread):
                 url = item['url']
                 pic = item['pic']
                 lemmaid = item['lemmaId']
+                relative_links.append(url)
 
                 threadLock_id_set_and_may_officer.acquire()
 
@@ -140,6 +180,12 @@ class baike_spider(threading.Thread):
                     self.may_officer_info.append(off_info)
 
                 threadLock_id_set_and_may_officer.release()
+        print('add may officer info Success!')
+
+        success_count += 1
+        print("获取相关链接成功数：" + str(success_count) + '/' + str(total_count))
+
+        return relative_links
 
     def find_div_begin_tag(self, soup, name):
         h2_tags = soup.find_all('h2', class_='title-text')
@@ -175,40 +221,74 @@ class baike_spider(threading.Thread):
                     break
         return del_content_blank(para_info)
 
-    def load_id_set_and_load_may_officer_info(self):
+    def load_id_set_and_load_may_officer_info(self, officer_file_list, may_officer_file_list, other_file_list):
         id_set = set()
-        may_officer_info = []
-        out = open('../data/官员信息.csv', newline='', encoding='utf-8')
-        csv_reader = csv.reader(out)
-        i = 1
-        for row in csv_reader:
-            print(row[0])
-            id_set.add(int(row[0]))
-            # may_officer_info.append([str(row[0])])
-            if i > 1000 and i < 1500:
-                may_officer_info.append([str(row[0])])
-            print("Load row: " + str(i))
-            i += 1
-        out.close()
-        return id_set, may_officer_info
+        may_id_set = set()
 
-    def officer_filter(self, soup):
+        may_officer_info = []
+
+        for file in officer_file_list:
+            out = open('../data/' + file, newline='', encoding='utf-8')
+            csv_reader = csv.reader(out)
+            i = 1
+            for row in csv_reader:
+                id_set.add(int(row[0]))
+                print("Load officer file:", file, str(i))
+                i += 1
+            out.close()
+
+        for file in may_officer_file_list:
+            out = open('../data/' + file, newline='', encoding='utf-8')
+            csv_reader = csv.reader(out)
+            i = 1
+            for row in csv_reader:
+                id_set.add(int(row[0]))
+                may_id_set.add(int(row[0]))
+                may_officer_info.append(row[0:4])
+                print("Load may_officer file:", file, str(i))
+                i += 1
+            out.close()
+
+        # for file in other_set_file:
+        #     out = open('../data/' + file, newline='', encoding='utf-8')
+        #     csv_reader = csv.reader(out)
+        #     i = 1
+        #     for row in csv_reader:
+        #         may_id_set.add(int(row[0]))
+        #         print("Load other file:", file, str(i))
+        #         i += 1
+        #     out.close()
+
+        return id_set, may_id_set, may_officer_info
+
+    def officer_filter(self, soup, officer_data):
+        name = officer_data[1]
+        if len(name) > 4:
+            return False
+
         summary = del_content_blank(soup.find('div', class_='lemma-summary').get_text())
+
+        summary = re.sub('湖南省长沙市|吉林省长春市', '', summary)
+
+        if summary.find('演员') >= 0 or summary.find('画家') >= 0 or summary.find('相声') >= 0 or summary.find('电影') >= 0 \
+                or summary.find('娱乐') or summary.find('游戏') > summary.find('主持') >= 0:
+            return False
+
         for item in self.job_dict:
             if summary.find(item) >= 0:
                 return True
 
-        if summary.find('演员') or summary.find('画家') or summary.find('相声') or summary.find('电影'):
-            return False
 
         catlog_tag = soup.find('div', class_='lemmaWgt-lemmaCatalog')
         if not isinstance(catlog_tag, bs4.element.Tag):
             return False
         text = str(catlog_tag.get_text())
-        if text.find('履历') < 0 or text.find('评论') >= 0 or text.find('评价') >= 0 or text.find('成就') >= 0 \
+        if text.find('评论') >= 0 or text.find('评价') >= 0 or text.find('成就') >= 0 \
                 or text.find('获奖') >= 0 or text.find('研究') >= 0 or text.find('荣誉') >= 0 \
                 or text.find('创业') >= 0 or text.find('成果') >= 0 or text.find('学术') >= 0 \
                 or text.find('贡献') >= 0 or text.find('作品') >= 0:
+            return False
+        if text.find('履历') < 0 and text.find('任职') < 0 and text.find('经历') < 0:
             return False
         return True
 
@@ -220,6 +300,8 @@ class baike_spider(threading.Thread):
 
 if __name__ == '__main__':
     counter = 0
+    total_count, success_count = (0, 0)
+    new_officer = 0
 
     threadLock_init = threading.Lock()
     threadLock_id_set_and_may_officer = threading.Lock()
