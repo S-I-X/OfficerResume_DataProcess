@@ -4,6 +4,11 @@ import re
 
 
 def get_year_pos(mess_text):
+    '''
+    得到年的位置，用于分成单条履历
+    :param mess_text: 分段后的履历
+    :return: 该段年位置列表
+    '''
     may_all_years = re.findall('\d\d\d\d', mess_text)
     all_years = []
     for year in may_all_years:
@@ -27,6 +32,12 @@ def get_year_pos(mess_text):
 
 
 def get_segments(mess_text, year_pos):
+    '''
+    根据时间位置，将履历段分成单条履历
+    :param mess_text: 履历段
+    :param year_pos: 该履历段的年位置列表
+    :return:
+    '''
     segments = []
     for i in range(len(year_pos) - 1):
         segments.append(mess_text[year_pos[i]: year_pos[i + 1]])
@@ -35,6 +46,11 @@ def get_segments(mess_text, year_pos):
 
 
 def process_segment(segment):
+    """
+    将单条履历分成：时间和履历内容
+    :param segment: 单条履历
+    :return: 时间，履历内容
+    """
     if segment.find('，') >= 0:
         seg_split = segment.split('，')
         return seg_split[0], seg_split[1]
@@ -58,6 +74,11 @@ def process_segment(segment):
 
 
 def process_last_segment(segment):
+    '''
+    处理最后一条单条履历
+    :param segment:　最后一条履历（可能含没有时间划分开的履历部分）
+    :return:　时间，履历内容，其他没有时间的履历
+    '''
     if segment.find('；') > 0 or segment.find('。') > 0:
         seg_split_pos = segment.find('；')
         if seg_split_pos <= 0:
@@ -71,6 +92,11 @@ def process_last_segment(segment):
 
 
 def get_divide_text(mess_text):
+    '''
+    将原始数据分段，分段依据是括号中的内容为单独一段，括号外的内容合起来为一段
+    :paext: 原始履历
+    :return: 段落列表
+    '''
     pos = []
     right_poi = 0
     left_poi = 0
@@ -118,6 +144,10 @@ def get_divide_text(mess_text):
 
 
 def process_introduce(mess_text):
+    '''
+    :param mess_text: 原始履历
+    :return: 时间-单条履历列表
+    '''
     divide_text = get_divide_text(mess_text)  # 把括号中的内容提出来
 
     segments = []
@@ -136,7 +166,7 @@ def process_introduce(mess_text):
         time_and_work.append([time, work])
     last_time, last_work, other_info = process_last_segment(segments[-1])
     time_and_work.append([last_time, last_work])
-    time_and_work.append([other_info]) if len(other_info) > 0 else ''
+    time_and_work.append(['', other_info]) if len(other_info) > 0 else ''
 
     return time_and_work
 
