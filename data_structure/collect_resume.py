@@ -1,5 +1,6 @@
 # -*- coding:utf-8 _-*-
 # !/usr/bin/python
+import psycopg2
 
 from data_structure.csv_to_postgre import getCon
 
@@ -58,7 +59,7 @@ def process_time(resume_time):
 
 if __name__ == '__main__':
     Connection = getCon(database='cof', user='postgres', password='postgres', host='192.168.10.6')
-    select_sql = "SELECT id_index, time_and_job, message_source FROM crawler.officer_message;"
+    select_sql = "SELECT id_index, time_and_job, message_source FROM crawler.officer_message WHERE head_image = '';"
     insert_sql = "INSERT INTO crawler.officer_resume (id_index, id_index_n, start_time, end_time, resume, " \
                  "message_source, work_age) VALUES ('{0}', '{1}', '{2}', '{3}'" \
                  ", '{4}', '{5}', '{6}') "
@@ -69,21 +70,33 @@ if __name__ == '__main__':
         print('开始往数据库写入' + id_index + '的履历信息')
         split_time_job = time_and_job.split(', ')
         # print(split_time_job, len(split_time_job))
-        try:
-            for i in range(int((len(split_time_job) + 1) / 2)):
-                time = split_time_job[i * 2]
+        # try:
+        for i in range(int((len(split_time_job) + 1) / 2)):
+            time = split_time_job[i * 2]
+            try:
                 resume = split_time_job[i * 2 + 1]
-                id_index_n = id_index + '_' + str(i + 1)
-                start_time, end_time, work_age = process_time(time)
-                new_start_time = re.sub('\[|\]', '', str(start_time)).replace(', ', '-')
-                new_end_time = re.sub('\[|\]', '', str(end_time)).replace(', ', '-')
-                finish_insert_sql = insert_sql.format(id_index, id_index_n, new_start_time, new_end_time, resume,
-                                                      message_source, work_age)
-                print(finish_insert_sql)
+            except IndexError:
+                resume = ''
+            id_index_n = id_index + '_' + str(i + 1)
+            start_time, end_time, work_age = process_time(time)
+            new_start_time = re.sub('\[|\]', '', str(start_time)).replace(', ', '-')
+            new_end_time = re.sub('\[|\]', '', str(end_time)).replace(', ', '-')
+            finish_insert_sql = insert_sql.format(id_index, id_index_n, new_start_time, new_end_time, resume,
+                                                  message_source, work_age)
+            print(finish_insert_sql)
+            try:
                 cur.execute(finish_insert_sql)
-                Connection.commit()
-                print(id_index + ' 的第' + str(i + 1) + ' 条履历 已写入数据库')
-        except IndexError:
-            None
+            except psycopg2.IntegrityError:
+                print(id_index + ' 的第' + str(i + 1) + ' 条履历 已**存在**数据库')
+                Connection.rollback()
+                continue
+            except psycopg2.DataError:
+                print(id_index + ' 的第' + str(i + 1) + ' 条履历 &&&出错&&&')
+                Connection.rollback()
+                continue
+            Connection.commit()
+            print(id_index + ' 的第' + str(i + 1) + ' 条履历 已写入数据库')
+        # except IndexError:
+        #     None
 
     Connection.close()

@@ -10,7 +10,7 @@ from mycode.util import get_html_by_url, del_content_blank
 
 
 def fetch_person_index(key, part_url, index_list):
-    if part_url == None:
+    if part_url is None:
         return
     pro_url = 'http://ldzl.people.com.cn/dfzlk/front/' + part_url
     try:
@@ -19,7 +19,7 @@ def fetch_person_index(key, part_url, index_list):
         print('province url is error: ', pro_url)
 
     soup = BeautifulSoup(raw_data, 'html.parser')
-    div_tag = soup.find('div', class_= 'fr p2j_reports_right title_2j sjzlk')
+    div_tag = soup.find('div', class_='fr p2j_reports_right title_2j sjzlk')
     city_h2_tags = div_tag.find_all('h2')
     city_div_tags = div_tag.find_all('div', class_='zlk_list')
 
@@ -69,7 +69,6 @@ def fetch_person_index_from_renminwang():
 
     out = open('../data/区级领导索引.csv', 'w', newline='', encoding='utf-8')
     csv_writer = csv.writer(out)
-
     count = 0
     for person_index in person_index_list:
         csv_writer.writerow(list(person_index))
@@ -84,9 +83,9 @@ def get_lemmid_and_pic_url(baike_url):
         print('baike url is error: ', baike_url)
     soup = BeautifulSoup(raw_data, 'html.parser')
     lemmid = soup.find('div', class_='lemmaWgt-promotion-rightPreciseAd').get('data-lemmaid')
-    pic_div = soup.find('div', class_ = 'summary-pic')
+    pic_div = soup.find('div', class_='summary-pic')
     pic_url = ''
-    if pic_div != None:
+    if pic_div is not None:
         pic_url = pic_div.find('img').get('src')
     return lemmid, pic_url
 
@@ -134,6 +133,7 @@ def multi_thread_fetch_part_info(index_list, csv_writer, threadLock_index_list, 
             csv_writer.writerow(part_info)
             threadLock_csv.release()
 
+
 def fetch_person_partinfo_from_baike(thread_num=10):
     f_index = open('../data/区级领导索引.csv', newline='', encoding='utf-8')
     csv_reader = csv.reader(f_index)
@@ -150,7 +150,8 @@ def fetch_person_partinfo_from_baike(thread_num=10):
 
     threads = []
     for i in range(thread_num):
-        t = threading.Thread(target=multi_thread_fetch_part_info, name='haha', args=(index_list, csv_writer, threadLock_index_list, threadLock_csv))
+        t = threading.Thread(target=multi_thread_fetch_part_info, name='haha',
+                             args=(index_list, csv_writer, threadLock_index_list, threadLock_csv))
         t.start()
         threads.append(t)
     for t in threads:
